@@ -128,4 +128,141 @@ echo json_encode($result);
 
 Para construir la imagen hace falta `docker build -t apache-php-random` y para lanzar el contenedor hace falta `docker run -p 8080:80 apache-php-random`
 
-Accedo a `http://localhost:8001` para comprobar que funciona, en la siguiente ruta muestra el archivo random `http://localhost:8001/random.php` y en esta la información de php `http://localhost:8001/info.php`.
+Accedo a `http://localhost:8080` para comprobar que funciona, en la siguiente ruta muestra el archivo random `http://localhost:8080/random.php` y en esta la información de php `http://localhost:8080/info.php`.
+
+# Sprint 5
+
+1. Creo una nueva carpeta `apache-php-mysql` y creo el archivo `docker-compose.yml`. Dentro del archivo añado lo siguiente:
+
+```yml
+# Configuracion archivo .yml
+version: '3.8'
+
+services:
+  apache-php:
+    build: ./apache-php
+    ports:
+      - "8080:80"
+    networks:
+      - app-network
+    depends_on:
+      - mysql
+
+  mysql:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: mydb
+      MYSQL_USER: user
+      MYSQL_PASSWORD: userpassword
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+
+# Construir contenedores con docker compose
+# docker-compose build
+
+# Lanzar los contenedores
+# docker-compose up -d
+
+# Detener los contenedores 
+# docker-compose down
+
+# Construir imagen para subirla
+# docker build -t <tu_usuario>/apache-php-mysql .
+
+# SUbir la imagen
+# docker push <tu_usuario>/apache-php-mysql
+
+```
+2. Creo un archivo `init.sql` que contiene la creacion de una base de datos y una tabla de usuarios con los campos `id`, `name` y `password`.
+
+3. Inserta varios usuarios dentro del `init.sql`.
+
+```SQL
+CREATE DATABASE IF NOT EXISTS db(d);
+
+USE db(d);
+
+CREATE TABLE IF NOT EXISTS users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    password VARCHAR(255) NOT NULL
+);
+
+INSERT INTO users (name, password) VALUES ('Javi', '1234');
+INSERT INTO users (name, password) VALUES ('Alvaro', 'wapeton04');
+INSERT INTO users (name, password) VALUES ('Ivoooooo', '18camachops');
+```
+4. Copio la carpeta `apache-php` a la carpeta actual y modifico el `index.php` añadiendo en la parte de arriba el siguiente código:
+
+```php
+// Datos de la base de datos
+$servername = "mysql";
+$username = "user";
+$password = "userpassword";
+$dbname = "mydb";
+
+// Crear conexión con la base de datos
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+// Verificar conexión
+if ($conn->connect_error) {
+    die("Conexión fallida: " . $conn->connect_error);
+}
+```
+5. Creo un archivo `users.php` que muestre todos los usuarios de la tabla `users` en la base de datos con el siguiente código:
+
+```php
+<?php
+$servername = "mysql";
+$username = "user";
+$password = "userpassword";
+$dbname = "mydb";
+
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+if ($conn->connect_error) {
+    die("Conexión fallida: " . $conn->connect_error);
+}
+
+$sql = "SELECT id, name, password FROM users";
+$result = $conn->query($sql);
+
+if ($result->num_rows > 0) {
+    // Salida de los datos de cada fila
+    while($row = $result->fetch_assoc()) {
+        echo "id: " . $row["id"]. " - Nombre: " . $row["name"]. " - Contraseña: " . $row["password"]. "<br>";
+    }
+} else {
+    echo "0 resultados";
+}
+$conn->close();
+?>
+```
+6. Para lanzar la imagen necesitaremos el comando `docker-compose build` lo que nos dará la siguiente situación:
+
+![Captura lanzamiento de imagen con compose](images/captura_imagen_compose.png)
+
+y el siguiente comando `docker-compose up -d` es para iniciar de forma local el contenedor. Se comprueba con la URL `http://localhost:8080`.
+
+7. Creo una imagen en `docker hub` con el entorno que he creado con el siguiente código:
+```
+docker build -t jashbash03/apache-php-mysql ./apache-php
+```
+
+8. Subo la imagen a `docker hub` con el siguiente código:
+```
+docker push jashbash03/apache-php-mysql
+```
+
+9. Compruebo la descarga con el siguiente código:
+```
+docker compose up
+```
