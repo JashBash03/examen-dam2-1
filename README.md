@@ -78,3 +78,54 @@ echo "<p>IP del cliente: " . $_SERVER['REMOTE_ADDR'] . "</p>";
 3. He creado la imagen con el comando `docker build -t apache-php-server .` y he lanzado el contenedor de forma local con `docker run -p 8080:80 apache-php-server` y comprobado mediante la URL `http://localhost:8080/` obteniendo como resultado lo siguiente:
 
 ![Captura resultado del servidor apache-php levantado](images/captura_apache-php.png)
+
+# Sprint 4
+
+
+
+1. Sigo en la carpeta apache-php.
+
+2. He creado un archivo info.php implementando la funcion phpinfo():
+
+```php
+<?php
+phpinfo();
+?>
+```
+3. Creamos un archivo random.php, que devuelva un JSON con lo siguiente:
+- Un número aleatorio entre 1 y 100.
+- Un mensaje que diga si el número es par o impar.
+- Un elemento aleatorio de un array que contenga al menos 5 elementos, a tu elección.
+
+```php
+<?php
+// Generar un número aleatorio entre 1 y 100
+$randomNumber = rand(1, 100);
+
+// Determinar si el número es par o impar
+$isEvenOrOdd = ($randomNumber % 2 === 0) ? "par" : "impar";
+
+// Crear un array con al menos 5 elementos
+$array = ["manzana", "banana", "cereza", "uva", "naranja"];
+
+// Elegir un elemento aleatorio del array
+$randomElement = $array[array_rand($array)];
+
+// Crear el arreglo de resultados
+$result = [
+    "numero" => $randomNumber,
+    "es_par_o_impar" => $isEvenOrOdd,
+    "elemento_aleatorio" => $randomElement
+];
+
+// Devolver los resultados como JSON
+header('Content-Type: application/json');
+echo json_encode($result);
+?>
+```
+
+4. Lanzarla localmente para comprobar que funciona.
+
+Para construir la imagen hace falta `docker build -t apache-php-random` y para lanzar el contenedor hace falta `docker run -p 8080:80 apache-php-random`
+
+Accedo a `http://localhost:8001` para comprobar que funciona, en la siguiente ruta muestra el archivo random `http://localhost:8001/random.php` y en esta la información de php `http://localhost:8001/info.php`.
